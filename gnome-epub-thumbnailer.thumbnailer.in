@@ -1,0 +1,4 @@
+[Thumbnailer Entry]
+TryExec=@bindir@/gnome-epub-thumbnailer
+Exec=@bindir@/gnome-epub-thumbnailer -s %s %u %o
+MimeType=application/epub+zip;
