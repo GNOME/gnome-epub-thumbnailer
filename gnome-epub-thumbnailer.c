@@ -304,6 +304,9 @@ int main (int argc, char **argv)
 	g_free (metafile);
 	if (cover_path != NULL) {
 		cover_data = file_get_zipped_contents (input_filename, (GCompareFunc) g_strcmp0, cover_path, &length);
+		if (cover_data == NULL)
+			g_warning ("Could not open cover file '%s' in '%s'",
+				   cover_path, filenames[0]);
 		g_free (cover_path);
 	}
 
