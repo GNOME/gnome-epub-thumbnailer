@@ -330,12 +330,13 @@ int main (int argc, char **argv)
 	}
 
 	mem_stream = g_memory_input_stream_new_from_data (cover_data, length, g_free);
-	pixbuf = gdk_pixbuf_new_from_stream_at_scale (mem_stream, output_size, -1, TRUE, NULL, NULL);
+	pixbuf = gdk_pixbuf_new_from_stream_at_scale (mem_stream, output_size, -1, TRUE, NULL, &error);
 	g_object_unref (mem_stream);
 
 	if (!pixbuf) {
-		g_warning ("Couldn't open embedded cover image for file '%s'",
-			   filenames[0]);
+		g_warning ("Couldn't open embedded cover image for file '%s': %s",
+			   filenames[0], error->message);
+		g_error_free (error);
 		return 1;
 	}
 
