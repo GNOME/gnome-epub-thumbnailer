@@ -139,23 +139,26 @@ get_prop_for_xpath (xmlDocPtr           doc,
 {
 	xmlXPathObjectPtr xpath_obj;
 	xmlNodePtr cur;
-	xmlChar *prop;
-	char *ret;
+	char *ret = NULL;
 
 	xpath_obj = xmlXPathEvalExpression (BAD_CAST (path), xpath_ctx);
 	if (xpath_obj == NULL)
 		return NULL;
-	if (xpath_obj->nodesetval == NULL) {
-		xmlXPathFreeObject (xpath_obj);
-		return NULL;
-	}
+	if (xpath_obj->nodesetval == NULL ||
+	    xpath_obj->nodesetval->nodeTab == NULL)
+		goto bail;
 	cur = xpath_obj->nodesetval->nodeTab[0];
-	prop = xmlGetProp (cur, BAD_CAST (name));
-	ret = NULL;
-	if (prop) {
-		ret = g_strdup ((const char *) prop);
-		xmlFree (prop);
+	if (cur != NULL) {
+		xmlChar *prop;
+
+		prop = xmlGetProp (cur, BAD_CAST (name));
+		if (prop) {
+			ret = g_strdup ((const char *) prop);
+			xmlFree (prop);
+		}
 	}
+
+bail:
 	xmlXPathFreeObject (xpath_obj);
 
 	return ret;
