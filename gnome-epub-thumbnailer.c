@@ -321,6 +321,11 @@ int main (int argc, char **argv)
 
 	g_free (input_filename);
 
+	if (cover_data == NULL) {
+		g_warning ("Could not find cover file in '%s'", filenames[0]);
+		return 1;
+	}
+
 	mem_stream = g_memory_input_stream_new_from_data (cover_data, length, g_free);
 	pixbuf = gdk_pixbuf_new_from_stream_at_scale (mem_stream, output_size, -1, TRUE, NULL, NULL);
 	g_object_unref (mem_stream);
