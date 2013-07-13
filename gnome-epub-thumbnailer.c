@@ -139,6 +139,7 @@ get_prop_for_xpath (xmlDocPtr           doc,
 {
 	xmlXPathObjectPtr xpath_obj;
 	xmlNodePtr cur;
+	xmlChar *prop;
 	char *ret;
 
 	xpath_obj = xmlXPathEvalExpression (BAD_CAST (path), xpath_ctx);
@@ -149,7 +150,12 @@ get_prop_for_xpath (xmlDocPtr           doc,
 		return NULL;
 	}
 	cur = xpath_obj->nodesetval->nodeTab[0];
-	ret = g_strdup ((const char *) xmlGetProp (cur, BAD_CAST (name)));
+	prop = xmlGetProp (cur, BAD_CAST (name));
+	ret = NULL;
+	if (prop) {
+		ret = g_strdup ((const char *) prop);
+		xmlFree (prop);
+	}
 	xmlXPathFreeObject (xpath_obj);
 
 	return ret;
@@ -238,6 +244,7 @@ get_cover_path_from_root_file (const char *metafile,
 	cover_path = full_cover_path;
 
 bail:
+	g_free (root_path);
 	xmlXPathFreeContext(xpath_ctx);
 	xmlFreeDoc (doc);
 
@@ -308,6 +315,8 @@ int main (int argc, char **argv)
 				     G_REGEX_CASELESS, 0, NULL);
 		cover_data = file_get_zipped_contents (input_filename, regex_matches, regex, &length);
 	}
+
+	g_free (input_filename);
 
 	mem_stream = g_memory_input_stream_new_from_data (cover_data, length, g_free);
 	pixbuf = gdk_pixbuf_new_from_stream_at_scale (mem_stream, output_size, -1, TRUE, NULL, NULL);
