@@ -35,7 +35,7 @@
 #define METAFILE_NAMESPACE "urn:oasis:names:tc:opendocument:xmlns:container"
 #define OPF_NAMESPACE "http://www.idpf.org/2007/opf"
 
-static int output_size = 64;
+static int output_size = 256;
 static gboolean g_fatal_warnings = FALSE;
 static char **filenames = NULL;
 
