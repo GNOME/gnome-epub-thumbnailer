@@ -259,6 +259,8 @@ int main (int argc, char **argv)
 	GFile *input;
 	const char *output;
 
+	g_type_init ();
+
 	/* Options parsing */
 	context = g_option_context_new ("Thumbnail EPub books");
 	g_option_context_add_main_entries (context, entries, NULL);
