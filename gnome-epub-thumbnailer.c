@@ -53,7 +53,7 @@ regex_matches (gconstpointer a,
 	const char *path = a;
 	GRegex *regex = (GRegex *) b;
 
-	if (g_regex_match (regex, a, 0, NULL))
+	if (g_regex_match (regex, path, 0, NULL))
 		return 0;
 	return -1;
 }
@@ -149,7 +149,7 @@ get_prop_for_xpath (xmlDocPtr           doc,
 		return NULL;
 	}
 	cur = xpath_obj->nodesetval->nodeTab[0];
-	ret = g_strdup ((const char *) xmlGetProp (cur, name));
+	ret = g_strdup ((const char *) xmlGetProp (cur, BAD_CAST (name)));
 	xmlXPathFreeObject (xpath_obj);
 
 	return ret;
@@ -250,7 +250,7 @@ int main (int argc, char **argv)
 	char *metafile;
 	gsize length;
 	char *cover_path;
-	char *cover_data;
+	char *cover_data = NULL;
 	GInputStream *mem_stream;
 
 	GdkPixbuf *pixbuf;
