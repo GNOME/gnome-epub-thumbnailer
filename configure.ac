@@ -12,7 +12,7 @@ AC_PROG_INSTALL
 AC_PROG_SED
 AM_PROG_CC_C_O
 
-PKG_CHECK_MODULES(THUMBNAILER, gdk-pixbuf-2.0 gio-2.0 libarchive)
+PKG_CHECK_MODULES(THUMBNAILER, gdk-pixbuf-2.0 gio-2.0 libarchive libxml-2.0)
 
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT

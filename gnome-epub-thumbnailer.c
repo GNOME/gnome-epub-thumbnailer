@@ -23,8 +23,17 @@
 #include <glib.h>
 #include <gio/gio.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
+
 #include <archive.h>
 #include <archive_entry.h>
+
+#include <libxml/tree.h>
+#include <libxml/parser.h>
+#include <libxml/xpath.h>
+#include <libxml/xpathInternals.h>
+
+#define METAFILE_NAMESPACE "urn:oasis:names:tc:opendocument:xmlns:container"
+#define OPF_NAMESPACE "http://www.idpf.org/2007/opf"
 
 static int output_size = 64;
 static gboolean g_fatal_warnings = FALSE;
@@ -36,17 +45,6 @@ static const GOptionEntry entries[] = {
 	{ G_OPTION_REMAINING, '\0', 0, G_OPTION_ARG_FILENAME_ARRAY, &filenames, NULL, "[FILE...]" },
 	{ NULL }
 };
-
-static char *
-get_cover_path_from_metafile (const char *metafile,
-			      gsize       length)
-{
-	//FIXME implement
-	//
-	//This means, finding the cover in the metafile, OR
-	//finding the OPF root file in the metafile, and parsing that to find the cover image
-	return NULL;
-}
 
 static int
 regex_matches (gconstpointer a,
@@ -107,6 +105,145 @@ file_get_zipped_contents (const char   *filename,
 	return ret;
 }
 
+static xmlDocPtr
+open_doc (const char *data,
+	  gsize       length,
+	  const char *root_name)
+{
+	xmlDocPtr doc;
+
+	if (data == NULL)
+		return NULL;
+
+	doc = xmlParseMemory (data, length);
+	if (doc == NULL)
+		doc = xmlRecoverMemory (data, length);
+
+	if(!doc ||
+	   !doc->children ||
+	   !doc->children->name ||
+	   g_ascii_strcasecmp ((char *)doc->children->name, root_name) != 0) {
+		if (doc != NULL)
+			xmlFreeDoc (doc);
+		return NULL;
+	}
+
+	return doc;
+}
+
+static char *
+get_prop_for_xpath (xmlDocPtr           doc,
+		    xmlXPathContextPtr  xpath_ctx,
+		    const char         *path,
+		    const char         *name)
+{
+	xmlXPathObjectPtr xpath_obj;
+	xmlNodePtr cur;
+	char *ret;
+
+	xpath_obj = xmlXPathEvalExpression (BAD_CAST (path), xpath_ctx);
+	if (xpath_obj == NULL)
+		return NULL;
+	if (xpath_obj->nodesetval == NULL) {
+		xmlXPathFreeObject (xpath_obj);
+		return NULL;
+	}
+	cur = xpath_obj->nodesetval->nodeTab[0];
+	ret = g_strdup ((const char *) xmlGetProp (cur, name));
+	xmlXPathFreeObject (xpath_obj);
+
+	return ret;
+}
+
+static char *
+get_root_file_from_metafile (const char *metafile,
+			     gsize       length)
+{
+	char *root_file;
+	xmlDocPtr doc;
+	xmlXPathContextPtr xpath_ctx;
+
+	doc = open_doc (metafile, length, "container");
+	if (!doc)
+		return NULL;
+
+	xpath_ctx = xmlXPathNewContext(doc);
+	xmlXPathRegisterNs (xpath_ctx, BAD_CAST ("ns"), BAD_CAST (METAFILE_NAMESPACE));
+
+	root_file = get_prop_for_xpath (doc, xpath_ctx, "//ns:container/ns:rootfiles/ns:rootfile", "full-path");
+
+	xmlXPathFreeContext(xpath_ctx);
+	xmlFreeDoc (doc);
+
+	return root_file;
+}
+
+static char *
+resolve_cover_path (const char *cover_path,
+		    const char *root_path)
+{
+	char *dirname;
+	char *ret;
+
+	dirname = g_path_get_dirname (root_path);
+	ret = g_build_filename (dirname, cover_path, NULL);
+	g_free (dirname);
+
+	return ret;
+}
+
+static char *
+get_cover_path_from_root_file (const char *metafile,
+			       gsize       length,
+			       const char *input_filename)
+{
+	xmlDocPtr doc;
+	xmlXPathContextPtr xpath_ctx;
+	char *root_path;
+	char *root_file;
+	gsize root_length;
+	char *content_name;
+	char *xpath;
+	char *cover_path, *full_cover_path;
+
+	cover_path = NULL;
+
+	root_path = get_root_file_from_metafile (metafile, length);
+	if (!root_path)
+		return NULL;
+
+	root_file = file_get_zipped_contents (input_filename, (GCompareFunc) g_strcmp0, root_path, &root_length);
+
+	doc = open_doc (root_file, root_length, "package");
+	g_free (root_file);
+	if (!doc) {
+		g_free (root_path);
+		return NULL;
+	}
+
+	xpath_ctx = xmlXPathNewContext(doc);
+	xmlXPathRegisterNs (xpath_ctx, BAD_CAST ("ns"), BAD_CAST (OPF_NAMESPACE));
+
+	content_name = get_prop_for_xpath (doc, xpath_ctx, "//ns:package/ns:metadata/ns:meta[@name='cover']", "content");
+	if (!content_name)
+		goto bail;
+
+	xpath = g_strdup_printf ("//ns:package/ns:manifest/ns:item[@id='%s']", content_name);
+	g_free (content_name);
+	cover_path = get_prop_for_xpath (doc, xpath_ctx, xpath, "href");
+	g_free (xpath);
+
+	full_cover_path = resolve_cover_path (cover_path, root_path);
+	g_free (cover_path);
+	cover_path = full_cover_path;
+
+bail:
+	xmlXPathFreeContext(xpath_ctx);
+	xmlFreeDoc (doc);
+
+	return cover_path;
+}
+
 int main (int argc, char **argv)
 {
 	char *input_filename;
@@ -154,7 +291,7 @@ int main (int argc, char **argv)
 
 	/* Look for the cover in the metafile */
 	metafile = file_get_zipped_contents (input_filename, (GCompareFunc) g_strcmp0, "META-INF/container.xml", &length);
-	cover_path = get_cover_path_from_metafile (metafile, length);
+	cover_path = get_cover_path_from_root_file (metafile, length, input_filename);
 	g_free (metafile);
 	if (cover_path != NULL) {
 		cover_data = file_get_zipped_contents (input_filename, (GCompareFunc) g_strcmp0, cover_path, &length);
@@ -173,6 +310,12 @@ int main (int argc, char **argv)
 	mem_stream = g_memory_input_stream_new_from_data (cover_data, length, g_free);
 	pixbuf = gdk_pixbuf_new_from_stream_at_scale (mem_stream, output_size, -1, TRUE, NULL, NULL);
 	g_object_unref (mem_stream);
+
+	if (!pixbuf) {
+		g_warning ("Couldn't open embedded cover image for file '%s'",
+			   filenames[0]);
+		return 1;
+	}
 
 	if (gdk_pixbuf_save (pixbuf, output, "png", &error, NULL) == FALSE) {
 		g_warning ("Couldn't save the thumbnail '%s' for file '%s': %s", output, filenames[0], error->message);
