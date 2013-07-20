@@ -21,8 +21,8 @@
 
 #include <string.h>
 #include <glib.h>
-#include <gio/gio.h>
-#include <gdk-pixbuf/gdk-pixbuf.h>
+
+#include "gnome-thumbnailer-skeleton.h"
 
 #include <archive.h>
 #include <archive_entry.h>
@@ -34,17 +34,6 @@
 
 #define METAFILE_NAMESPACE "urn:oasis:names:tc:opendocument:xmlns:container"
 #define OPF_NAMESPACE "http://www.idpf.org/2007/opf"
-
-static int output_size = 256;
-static gboolean g_fatal_warnings = FALSE;
-static char **filenames = NULL;
-
-static const GOptionEntry entries[] = {
-	{ "size", 's', 0, G_OPTION_ARG_INT, &output_size, "Size of the thumbnail in pixels", NULL },
-	{"g-fatal-warnings", 0, 0, G_OPTION_ARG_NONE, &g_fatal_warnings, "Make all warnings fatal", NULL},
-	{ G_OPTION_REMAINING, '\0', 0, G_OPTION_ARG_FILENAME_ARRAY, &filenames, NULL, "[FILE...]" },
-	{ NULL }
-};
 
 static int
 regex_matches (gconstpointer a,
@@ -75,7 +64,7 @@ file_get_zipped_contents (const char   *filename,
 	archive_read_support_format_zip (a);
 	r = archive_read_open_filename (a, filename, 10240);
 	if (r != ARCHIVE_OK) {
-		g_print ("Failed to open archive %s\n", filenames[0]);
+		g_print ("Failed to open archive %s\n", filename);
 		return NULL;
 	}
 
@@ -254,62 +243,25 @@ bail:
 	return cover_path;
 }
 
-int main (int argc, char **argv)
+char *
+file_to_data (const char  *path,
+	      gsize       *ret_length,
+	      GError     **error)
 {
-	char *input_filename;
 	char *metafile;
 	gsize length;
 	char *cover_path;
 	char *cover_data = NULL;
-	GInputStream *mem_stream;
-
-	GdkPixbuf *pixbuf;
-	GError *error = NULL;
-	GOptionContext *context;
-	GFile *input;
-	const char *output;
-
-	g_type_init ();
-
-	/* Options parsing */
-	context = g_option_context_new ("Thumbnail EPub books");
-	g_option_context_add_main_entries (context, entries, NULL);
-
-	if (g_option_context_parse (context, &argc, &argv, &error) == FALSE) {
-		g_warning ("Couldn't parse command-line options: %s", error->message);
-		g_error_free (error);
-		return 1;
-	}
-
-	/* Set fatal warnings if required */
-	if (g_fatal_warnings) {
-		GLogLevelFlags fatal_mask;
-
-		fatal_mask = g_log_set_always_fatal (G_LOG_FATAL_MASK);
-		fatal_mask |= G_LOG_LEVEL_WARNING | G_LOG_LEVEL_CRITICAL;
-		g_log_set_always_fatal (fatal_mask);
-	}
-
-	if (filenames == NULL || g_strv_length (filenames) != 2) {
-		g_print ("Expects an input and an output file\n");
-		return 1;
-	}
-
-	input = g_file_new_for_commandline_arg (filenames[0]);
-	input_filename = g_file_get_path (input);
-	g_object_unref (input);
-
-	output = filenames[1];
 
 	/* Look for the cover in the metafile */
-	metafile = file_get_zipped_contents (input_filename, (GCompareFunc) g_strcmp0, "META-INF/container.xml", &length);
-	cover_path = get_cover_path_from_root_file (metafile, length, input_filename);
+	metafile = file_get_zipped_contents (path, (GCompareFunc) g_strcmp0, "META-INF/container.xml", &length);
+	cover_path = get_cover_path_from_root_file (metafile, length, path);
 	g_free (metafile);
 	if (cover_path != NULL) {
-		cover_data = file_get_zipped_contents (input_filename, (GCompareFunc) g_strcmp0, cover_path, &length);
+		cover_data = file_get_zipped_contents (path, (GCompareFunc) g_strcmp0, cover_path, &length);
 		if (cover_data == NULL)
 			g_warning ("Could not open cover file '%s' in '%s'",
-				   cover_path, filenames[0]);
+				   cover_path, path);
 		g_free (cover_path);
 	}
 
@@ -319,34 +271,15 @@ int main (int argc, char **argv)
 
 		regex = g_regex_new (".*cover.*\\.(jpg|jpeg|png)",
 				     G_REGEX_CASELESS, 0, NULL);
-		cover_data = file_get_zipped_contents (input_filename, regex_matches, regex, &length);
+		cover_data = file_get_zipped_contents (path, regex_matches, regex, &length);
 	}
-
-	g_free (input_filename);
 
 	if (cover_data == NULL) {
-		g_warning ("Could not find cover file in '%s'", filenames[0]);
-		return 1;
+		g_warning ("Could not find cover file in '%s'", path);
+		return NULL;
 	}
 
-	mem_stream = g_memory_input_stream_new_from_data (cover_data, length, g_free);
-	pixbuf = gdk_pixbuf_new_from_stream_at_scale (mem_stream, output_size, -1, TRUE, NULL, &error);
-	g_object_unref (mem_stream);
+	*ret_length = length;
 
-	if (!pixbuf) {
-		g_warning ("Couldn't open embedded cover image for file '%s': %s",
-			   filenames[0], error->message);
-		g_error_free (error);
-		return 1;
-	}
-
-	if (gdk_pixbuf_save (pixbuf, output, "png", &error, NULL) == FALSE) {
-		g_warning ("Couldn't save the thumbnail '%s' for file '%s': %s", output, filenames[0], error->message);
-		g_error_free (error);
-		return 1;
-	}
-
-	g_object_unref (pixbuf);
-
-	return 0;
+	return cover_data;
 }

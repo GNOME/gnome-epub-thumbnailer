@@ -1,8 +1,12 @@
 
 bin_PROGRAMS = gnome-epub-thumbnailer
 
-gnome_epub_thumbnailer_SOURCES = gnome-epub-thumbnailer.c
-gnome_epub_thumbnailer_CPPFLAGS = $(THUMBNAILER_CFLAGS) $(WARN_CFLAGS)
+gnome_epub_thumbnailer_SOURCES = gnome-epub-thumbnailer.c gnome-thumbnailer-skeleton.c gnome-thumbnailer-skeleton.h
+gnome_epub_thumbnailer_CPPFLAGS =			\
+	$(THUMBNAILER_CFLAGS)				\
+	-DTHUMBNAILER_RETURNS_DATA			\
+	-DTHUMBNAILER_USAGE="\"Thumbnail EPub books\""	\
+	$(WARN_CFLAGS)
 gnome_epub_thumbnailer_LDADD = $(THUMBNAILER_LIBS)
 
 thumbnailerdir = $(datadir)/thumbnailers/
