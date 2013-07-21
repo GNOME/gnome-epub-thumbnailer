@@ -4,7 +4,7 @@
 	 xmlns:gnome="http://api.gnome.org/doap-extensions#"
 	 xmlns="http://usefulinc.com/ns/doap#">
 	<name xml:lang="en">gnome-epub-thumbnailer</name>
-	<shortdesc xml:lang="en">Thumbnailer for EPub books</shortdesc>
+	<shortdesc xml:lang="en">Thumbnailer for EPub and MOBI books</shortdesc>
 	<homepage rdf:resource="http://git.gnome.org/browse/gnome-epub-thumbnailer/" />
 	<category rdf:resource="http://api.gnome.org/doap-extensions#desktop" />
 	<maintainer>

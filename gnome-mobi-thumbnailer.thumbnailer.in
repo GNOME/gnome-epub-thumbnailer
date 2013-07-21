@@ -1,0 +1,4 @@
+[Thumbnailer Entry]
+TryExec=@bindir@/gnome-mobi-thumbnailer
+Exec=@bindir@/gnome-mobi-thumbnailer -s %s %u %o
+MimeType=application/x-mobipocket-ebook;
