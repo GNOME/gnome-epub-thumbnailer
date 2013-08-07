@@ -78,7 +78,6 @@ load_sections (GInputStream  *stream,
 
 	sections_data = g_malloc (sections->num_sections * 8);
 	if (g_input_stream_read (G_INPUT_STREAM (stream), sections_data, sections->num_sections * 8, NULL, error) < 0) {
-		free_sections (sections);
 		return NULL;
 	}
 	for (i = 0; i < sections->num_sections * 2; i = i + 2) {
@@ -171,7 +170,6 @@ get_image_section (GInputStream  *stream,
 	if (get_guint16 (header + 0xC) != 0) {
 		g_set_error_literal (error, 0, 0, "File is encrypted");
 		g_free (header);
-		free_sections (sections);
 		return -1;
 	}
 
@@ -179,7 +177,6 @@ get_image_section (GInputStream  *stream,
 	if (!(get_guint32 (header + 0x80) & 0x40)) {
 		g_set_error_literal (error, 0, 0, "File has no metadata");
 		g_free (header);
-		free_sections (sections);
 		return -1;
 	}
 
@@ -205,6 +202,7 @@ file_to_data (const char  *path,
 	Sections *sections;
 	GFileInputStream *stream;
 	GFile *input;
+	GError *tmp_error = NULL;
 	int image_num;
 	char *ret;
 
@@ -216,18 +214,26 @@ file_to_data (const char  *path,
 	if (!stream)
 		return NULL;
 
-	sections = load_sections (G_INPUT_STREAM (stream), error);
+	sections = load_sections (G_INPUT_STREAM (stream), &tmp_error);
 	if (sections == NULL || sections->ident == NULL)
 		goto bail;
 	if (!g_str_equal (sections->ident, "BOOKMOBI") &&
 	    !g_str_equal (sections->ident, "TEXtREAd")) {
-		g_set_error (error, 0, 0, "File is not in a recognised MOBI format '%s'", sections->ident);
+		if (tmp_error != NULL) {
+			g_propagate_error (error, tmp_error);
+		} else {
+			g_set_error (error, 0, 0, "File is not in a recognised MOBI format '%s'", sections->ident);
+		}
 		goto bail;
 	}
 
-	image_num = get_image_section (G_INPUT_STREAM (stream), sections, error);
+	image_num = get_image_section (G_INPUT_STREAM (stream), sections, &tmp_error);
 	if (image_num < 0) {
-		g_set_error_literal (error, 0, 0, "Got an error getting the image number");
+		if (tmp_error != NULL) {
+			g_propagate_error (error, tmp_error);
+		} else {
+			g_set_error_literal (error, 0, 0, "Got an error getting the image number");
+		}
 		goto bail;
 	}
 
