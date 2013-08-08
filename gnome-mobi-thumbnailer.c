@@ -168,14 +168,14 @@ get_image_section (GInputStream  *stream,
 
 	/* Checking crypto type */
 	if (get_guint16 (header + 0xC) != 0) {
-		g_set_error_literal (error, 0, 0, "File is encrypted");
+		g_set_error_literal (error, G_IO_ERROR, G_IO_ERROR_FAILED, "File is encrypted");
 		g_free (header);
 		return -1;
 	}
 
 	/* Checking metadata availability */
 	if (!(get_guint32 (header + 0x80) & 0x40)) {
-		g_set_error_literal (error, 0, 0, "File has no metadata");
+		g_set_error_literal (error, G_IO_ERROR, G_IO_ERROR_FAILED, "File has no metadata");
 		g_free (header);
 		return -1;
 	}
@@ -222,7 +222,7 @@ file_to_data (const char  *path,
 		if (tmp_error != NULL) {
 			g_propagate_error (error, tmp_error);
 		} else {
-			g_set_error (error, 0, 0, "File is not in a recognised MOBI format '%s'", sections->ident);
+			g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED, "File is not in a recognised MOBI format '%s'", sections->ident);
 		}
 		goto bail;
 	}
@@ -232,7 +232,7 @@ file_to_data (const char  *path,
 		if (tmp_error != NULL) {
 			g_propagate_error (error, tmp_error);
 		} else {
-			g_set_error_literal (error, 0, 0, "Got an error getting the image number");
+			g_set_error_literal (error, G_IO_ERROR, G_IO_ERROR_FAILED, "Got an error getting the image number");
 		}
 		goto bail;
 	}
