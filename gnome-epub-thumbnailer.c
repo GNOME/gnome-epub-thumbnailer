@@ -68,8 +68,16 @@ file_get_zipped_contents (const char   *filename,
 		return NULL;
 	}
 
-	while (archive_read_next_header(a, &entry) == ARCHIVE_OK) {
+	while (1) {
 		const char *name;
+
+		r = archive_read_next_header(a, &entry);
+
+		if (r != ARCHIVE_OK) {
+			if (r != ARCHIVE_EOF && r == ARCHIVE_FATAL)
+				g_warning ("Fatal error handling archive: %s", archive_error_string (a));
+			break;
+		}
 
 		name = archive_entry_pathname (entry);
 		if (func (name, user_data) == 0) {
