@@ -283,7 +283,7 @@ file_to_data (const char  *path,
 	}
 
 	if (cover_data == NULL) {
-		g_warning ("Could not find cover file in '%s'", path);
+		g_set_error_literal (error, G_IO_ERROR, G_IO_ERROR_FAILED, "Could not find cover file");
 		return NULL;
 	}
 
