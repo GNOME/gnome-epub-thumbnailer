@@ -219,8 +219,10 @@ get_cover_path_from_root_file (const char *metafile,
 	cover_path = NULL;
 
 	root_path = get_root_file_from_metafile (metafile, length);
-	if (!root_path)
+	if (!root_path) {
+		g_warning ("Couldn't get root path for metafile %s", metafile);
 		return NULL;
+	}
 
 	root_file = file_get_zipped_contents (input_filename, (GCompareFunc) g_strcmp0, root_path, &root_length);
 
