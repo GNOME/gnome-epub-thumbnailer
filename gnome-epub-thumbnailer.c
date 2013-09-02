@@ -89,6 +89,10 @@ file_get_zipped_contents (const char   *filename,
 			read = archive_read_data (a, buf, size);
 			if (read <= 0) {
 				g_free (buf);
+				if (read < 0)
+					g_warning ("Fatal error reading '%s' in archive: %s", name, archive_error_string (a));
+				else
+					g_warning ("Read an empty file from the archive");
 			} else {
 				ret = buf;
 				*length = size;
