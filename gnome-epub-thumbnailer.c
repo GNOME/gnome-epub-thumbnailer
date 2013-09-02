@@ -263,6 +263,10 @@ file_to_data (const char  *path,
 
 	/* Look for the cover in the metafile */
 	metafile = file_get_zipped_contents (path, (GCompareFunc) g_strcmp0, "META-INF/container.xml", &length);
+	if (metafile == NULL) {
+		g_set_error_literal (error, G_IO_ERROR, G_IO_ERROR_FAILED, "Could not find META-INF/container.xml file");
+		return NULL;
+	}
 	cover_path = get_cover_path_from_root_file (metafile, length, path);
 	g_free (metafile);
 	if (cover_path != NULL) {
