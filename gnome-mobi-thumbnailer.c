@@ -166,13 +166,6 @@ get_image_section (GInputStream  *stream,
 
 	header = get_section_data (G_INPUT_STREAM (stream), sections, 0, &len);
 
-	/* Checking crypto type */
-	if (get_guint16 (header + 0xC) != 0) {
-		g_set_error_literal (error, G_IO_ERROR, G_IO_ERROR_FAILED, "File is encrypted");
-		g_free (header);
-		return -1;
-	}
-
 	/* Checking metadata availability */
 	if (!(get_guint32 (header + 0x80) & 0x40)) {
 		g_set_error_literal (error, G_IO_ERROR, G_IO_ERROR_FAILED, "File has no metadata");
