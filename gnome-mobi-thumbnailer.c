@@ -183,6 +183,8 @@ get_image_section (GInputStream  *stream,
 	}
 
 	image_num = get_cover_img_num (header);
+	if (image_num < 0)
+		return image_num;
 
 	return first_img + image_num;
 }
