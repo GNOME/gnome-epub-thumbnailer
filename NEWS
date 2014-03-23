@@ -1,3 +1,13 @@
+1.4
+---
+
+- Create covers for encrypted MOBI files as well
+- Fix crash when there's no cover in MOBI files
+- Fix crash when the EPub cover cannot be found
+- Print warnings when we cannot find the metafile,
+  or when reading empty EPub files
+- Fix crash handling files in trash or recent locations
+
 1.3
 ---
 
