@@ -196,7 +196,10 @@ resolve_cover_path (const char *cover_path,
 	char *ret;
 
 	dirname = g_path_get_dirname (root_path);
-	ret = g_build_filename (dirname, cover_path, NULL);
+	if (g_strcmp0(".", dirname) != 0)
+		ret = g_build_filename (dirname, cover_path, NULL);
+	else
+		ret = g_strdup(cover_path);
 	g_free (dirname);
 
 	return ret;
