@@ -126,6 +126,11 @@ get_cover_img_num (const char *header)
 	len = get_guint32 (header + 20);
 	extheader = header + 16 + len;
 
+	if (!g_str_equal (extheader, "EXTH")) {
+	        g_warning ("Corrupt or missing EXTH header");
+		return -1;
+	}
+
 	num_items = get_guint32 (extheader + 8);
 	g_debug ("num extheader items: %d", num_items);
 	extheader = extheader + 12;
