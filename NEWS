@@ -1,3 +1,8 @@
+1.5
+---
+- Fix MOBI crasher with malformed or missing EXTH header
+- Fix EPub thumbnailing with cover at the root of the archive
+
 1.4
 ---
 
