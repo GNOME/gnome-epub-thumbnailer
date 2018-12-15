@@ -6,7 +6,7 @@
 	<name xml:lang="en">gnome-epub-thumbnailer</name>
 	<shortdesc xml:lang="en">Thumbnailer for EPub and MOBI books</shortdesc>
 	<bug-database rdf:resource="https://gitlab.gnome.org/GNOME/gnome-epub-thumbnailer/issues/" />
-	<category rdf:resource="http://api.gnome.org/doap-extensions#desktop" />
+	<!-- <category rdf:resource="http://api.gnome.org/doap-extensions#desktop" /> -->
 	<maintainer>
 		<foaf:Person>
 			<foaf:name>Bastien Nocera</foaf:name>
