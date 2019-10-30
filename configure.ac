@@ -1,6 +1,6 @@
 AC_PREREQ(2.59)
 
-AC_INIT([gnome-epub-thumbnailer], [1.5], [hadess@hadess.net])
+AC_INIT([gnome-epub-thumbnailer], [1.6], [hadess@hadess.net])
 
 AC_CONFIG_MACRO_DIR([m4])
 

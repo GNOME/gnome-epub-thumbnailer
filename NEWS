@@ -1,3 +1,8 @@
+1.6
+---
+- Add support for SVG covers in ePub 3.0 files
+- Add support for Kindle Format 8 MOBI files
+
 1.5
 ---
 - Fix MOBI crasher with malformed or missing EXTH header
