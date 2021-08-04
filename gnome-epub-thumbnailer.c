@@ -215,8 +215,6 @@ get_cover_path_from_root_file (const char *metafile,
 	char *root_path;
 	char *root_file;
 	gsize root_length;
-	char *content_name;
-	char *xpath;
 	char *cover_path, *full_cover_path;
 
 	cover_path = NULL;
@@ -242,15 +240,23 @@ get_cover_path_from_root_file (const char *metafile,
 	xpath_ctx = xmlXPathNewContext(doc);
 	xmlXPathRegisterNs (xpath_ctx, BAD_CAST ("ns"), BAD_CAST (OPF_NAMESPACE));
 
-	content_name = get_prop_for_xpath (doc, xpath_ctx, "//ns:package/ns:metadata/ns:meta[@name='cover']", "content");
-	if (!content_name)
-		goto bail;
-	g_debug ("Found content_name '%s'", content_name);
+	/* Look for "cover-image" manifest item property
+	 * https://www.w3.org/publishing/epub3/epub-packages.html#sec-item-property-values */
+	cover_path = get_prop_for_xpath (doc, xpath_ctx, "//ns:package/ns:manifest/ns:item[@properties='cover-image']", "href");
 
-	xpath = g_strdup_printf ("//ns:package/ns:manifest/ns:item[@id='%s']", content_name);
-	g_free (content_name);
-	cover_path = get_prop_for_xpath (doc, xpath_ctx, xpath, "href");
-	g_free (xpath);
+	if (!cover_path) {
+		g_autofree char *xpath = NULL;
+		g_autofree char *content_name = NULL;
+
+		content_name = get_prop_for_xpath (doc, xpath_ctx, "//ns:package/ns:metadata/ns:meta[@name='cover']", "content");
+		if (!content_name)
+			goto bail;
+		g_debug ("Found content_name '%s'", content_name);
+
+		xpath = g_strdup_printf ("//ns:package/ns:manifest/ns:item[@id='%s']", content_name);
+		cover_path = get_prop_for_xpath (doc, xpath_ctx, xpath, "href");
+	}
+
 	g_debug ("Found cover_path '%s'", cover_path);
 
 	full_cover_path = resolve_cover_path (cover_path, root_path);
