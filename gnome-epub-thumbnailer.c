@@ -227,7 +227,10 @@ get_cover_path_from_root_file (const char *metafile,
 		return NULL;
 	}
 
+	g_debug ("Got root path '%s' from metafile", root_path);
 	root_file = file_get_zipped_contents (input_filename, (GCompareFunc) g_strcmp0, root_path, &root_length);
+	if (root_file != NULL)
+		g_debug ("#### '%s' contents ####\n%s", root_path, root_file);
 
 	doc = open_doc (root_file, root_length, "package");
 	g_free (root_file);
@@ -242,15 +245,18 @@ get_cover_path_from_root_file (const char *metafile,
 	content_name = get_prop_for_xpath (doc, xpath_ctx, "//ns:package/ns:metadata/ns:meta[@name='cover']", "content");
 	if (!content_name)
 		goto bail;
+	g_debug ("Found content_name '%s'", content_name);
 
 	xpath = g_strdup_printf ("//ns:package/ns:manifest/ns:item[@id='%s']", content_name);
 	g_free (content_name);
 	cover_path = get_prop_for_xpath (doc, xpath_ctx, xpath, "href");
 	g_free (xpath);
+	g_debug ("Found cover_path '%s'", cover_path);
 
 	full_cover_path = resolve_cover_path (cover_path, root_path);
 	g_free (cover_path);
 	cover_path = full_cover_path;
+	g_debug ("Resolved full_cover_path '%s'", cover_path);
 
 bail:
 	g_free (root_path);
@@ -276,6 +282,7 @@ file_to_data (const char  *path,
 		g_set_error_literal (error, G_IO_ERROR, G_IO_ERROR_FAILED, "Could not find META-INF/container.xml file");
 		return NULL;
 	}
+	g_debug ("#### META-INF/container.xml contents ####\n %s", metafile);
 	cover_path = get_cover_path_from_root_file (metafile, length, path);
 	g_free (metafile);
 	if (cover_path != NULL) {
