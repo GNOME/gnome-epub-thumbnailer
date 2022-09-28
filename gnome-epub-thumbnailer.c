@@ -276,8 +276,8 @@ file_to_data (const char  *path,
 	      GError     **error)
 {
 	g_autofree char *metafile = NULL;
+	g_autofree char *cover_path = NULL;
 	gsize length;
-	char *cover_path;
 	char *cover_data = NULL;
 
 	/* Look for the cover in the metafile */
@@ -293,7 +293,6 @@ file_to_data (const char  *path,
 		if (cover_data == NULL)
 			g_warning ("Could not open cover file '%s' in '%s'",
 				   cover_path, path);
-		g_free (cover_path);
 	}
 
 	/* Look for it by name instead */
