@@ -275,7 +275,7 @@ file_to_data (const char  *path,
 	      gsize       *ret_length,
 	      GError     **error)
 {
-	char *metafile;
+	g_autofree char *metafile = NULL;
 	gsize length;
 	char *cover_path;
 	char *cover_data = NULL;
@@ -288,7 +288,6 @@ file_to_data (const char  *path,
 	}
 	g_debug ("#### META-INF/container.xml contents ####\n %s", metafile);
 	cover_path = get_cover_path_from_root_file (metafile, length, path);
-	g_free (metafile);
 	if (cover_path != NULL) {
 		cover_data = file_get_zipped_contents (path, (GCompareFunc) g_strcmp0, cover_path, &length);
 		if (cover_data == NULL)
