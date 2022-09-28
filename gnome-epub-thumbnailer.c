@@ -213,7 +213,7 @@ get_cover_path_from_root_file (const char *metafile,
 	xmlDocPtr doc;
 	xmlXPathContextPtr xpath_ctx;
 	g_autofree char *root_path = NULL;
-	char *root_file;
+	g_autofree char *root_file = NULL;
 	gsize root_length;
 	char *cover_path, *full_cover_path;
 
@@ -231,7 +231,6 @@ get_cover_path_from_root_file (const char *metafile,
 		g_debug ("#### '%s' contents ####\n%s", root_path, root_file);
 
 	doc = open_doc (root_file, root_length, "package");
-	g_free (root_file);
 	if (!doc)
 		return NULL;
 
