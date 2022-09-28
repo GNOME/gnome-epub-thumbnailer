@@ -258,6 +258,8 @@ get_cover_path_from_root_file (const char *metafile,
 	}
 
 	g_debug ("Found cover_path '%s'", cover_path);
+	if (!cover_path)
+		goto bail;
 
 	full_cover_path = resolve_cover_path (cover_path, root_path);
 	g_free (cover_path);
