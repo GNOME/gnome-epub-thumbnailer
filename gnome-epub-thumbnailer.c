@@ -252,6 +252,8 @@ get_cover_path_from_root_file (const char *metafile,
 
 		xpath = g_strdup_printf ("//ns:package/ns:manifest/ns:item[@id='%s']", content_name);
 		cover_path = get_prop_for_xpath (doc, xpath_ctx, xpath, "href");
+		if (!cover_path)
+			cover_path = g_strdup (content_name);
 	}
 
 	g_debug ("Found cover_path '%s'", cover_path);
