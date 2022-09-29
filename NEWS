@@ -1,3 +1,9 @@
+1.7
+---
+- Fix thumbnailing of books with ePub 3.2 "cover-image"
+- Work-around a broken ePub not getting a cover
+- Port build system to meson
+
 1.6
 ---
 - Add support for SVG covers in ePub 3.0 files

@@ -1,4 +1,4 @@
-project('gnome-epub-thumbnailer', 'c', version : '1.6')
+project('gnome-epub-thumbnailer', 'c', version : '1.7')
 
 deps = [dependency('gdk-pixbuf-2.0'),
         dependency('gio-2.0'),
