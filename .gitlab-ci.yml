@@ -1,9 +1,6 @@
-stages:
-- test
+image: fedora:latest
 
 build-fedora:
-  image: fedora:latest
-  stage: test
   before_script:
     - dnf install -y gcc redhat-rpm-config which make automake autoconf libarchive-devel libxml2-devel gdk-pixbuf2-devel glib2-devel
   script:
@@ -11,3 +8,27 @@ build-fedora:
     - make
     - make install
 
+build-fedora-meson:
+  variables:
+    DEPENDENCIES: gcc
+                  meson
+                  libarchive-devel
+                  libxml2-devel
+                  gdk-pixbuf2-devel
+                  glib2-devel
+                  git-core
+
+  before_script:
+    - dnf update -y && dnf install -y $DEPENDENCIES
+  script:
+    - meson _build
+    - ninja -v -C _build
+    - ninja -v -C _build install
+    - ninja -v -C _build uninstall
+    - ninja -v -C _build dist
+  artifacts:
+      when: always
+      name: "gnome-epub-thumbnailer-${CI_COMMIT_REF_NAME}"
+      paths:
+        - "${CI_PROJECT_DIR}/_build/meson-logs"
+        - "${CI_PROJECT_DIR}/_build/meson-dist"
