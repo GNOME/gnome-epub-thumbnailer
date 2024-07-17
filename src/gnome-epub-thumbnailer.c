@@ -301,7 +301,7 @@ file_to_data (const char  *path,
 	if (cover_data == NULL) {
 		GRegex *regex;
 
-		regex = g_regex_new (".*cover.*\\.(jpg|jpeg|png|svg)",
+		regex = g_regex_new (".*(cover|couv).*\\.(jpg|jpeg|png|svg)",
 				     G_REGEX_CASELESS, 0, NULL);
 		cover_data = file_get_zipped_contents (path, regex_matches, regex, &length);
 	}
