@@ -1,3 +1,7 @@
+1.8
+---
+- Work-around a French ePub not getting a cover
+
 1.7
 ---
 - Fix thumbnailing of books with ePub 3.2 "cover-image"
